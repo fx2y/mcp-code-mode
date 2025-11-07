@@ -13,27 +13,27 @@
    - [ ] Skim Claude Agent SDK overview + migration notes to spot breaking changes before coding.
 
 3. Repo Scaffolding (ESM + TS)
-   - [ ] Create `mcp-agent` dir, `git init -q`, `npm init -y`; commit baseline.
-   - [ ] Install runtime deps `npm i @anthropic-ai/claude-agent-sdk` (pins latest Nov 2025); log semver.
-   - [ ] Install dev deps `npm i -D typescript tsx @types/node` for TS compile + ESM runner.
-   - [ ] Generate `tsconfig` via `npx tsc --init --rootDir src --outDir dist --module ES2022 --target ES2022 --esModuleInterop`.
-   - [ ] Create `src/` tree; ensure editor/formatter configs respect ESM + TS defaults.
+   - [x] Create `mcp-agent` dir, `git init -q`, `npm init -y`; commit baseline.
+   - [x] Install runtime deps `npm i @anthropic-ai/claude-agent-sdk` (pins latest Nov 2025); log semver.
+   - [x] Install dev deps `npm i -D typescript tsx @types/node` for TS compile + ESM runner.
+   - [x] Generate `tsconfig` via `npx tsc --init --rootDir src --outDir dist --module ES2022 --target ES2022 --esModuleInterop`.
+   - [x] Create `src/` tree; ensure editor/formatter configs respect ESM + TS defaults.
 
 4. Secrets & Config Hardening
    - [ ] Create local `.env` with single line `ANTHROPIC_API_KEY=sk-ant-...`; note storage policy (never commit).
    - [ ] Document alt shell export snippet in README for CI/Windows.
-   - [ ] Update `.gitignore` to include `node_modules/`, `dist/`, `.env` (order for readability).
+   - [x] Update `.gitignore` to include `node_modules/`, `dist/`, `.env` (order for readability).
    - [ ] Optionally script secret validation to fail fast if key missing before runtime.
 
 5. Minimal Agent Implementation (`src/hello.ts`)
-   - [ ] Import `{ query }` from SDK; instantiate `query({ model: "claude-3-5-sonnet-latest", messages:[{role:"user",content:"Say hello briefly."}], allowedTools: [] })`.
-   - [ ] Implement `for await (const m of it)` loop printing string deltas and newline on `message_stop` to stdout.
-   - [ ] Keep code tool-free, no custom tool registry; add terse comment explaining streaming delta handling.
-   - [ ] Ensure TypeScript types satisfied without suppressions; rely on `@types/node` for `process.stdout` typings.
+   - [x] Import `{ query }` from SDK; instantiate `query({ model: "claude-3-5-sonnet-latest", messages:[{role:"user",content:"Say hello briefly."}], allowedTools: [] })`.
+   - [x] Implement `for await (const m of it)` loop printing string deltas and newline on `message_stop` to stdout.
+   - [x] Keep code tool-free, no custom tool registry; add terse comment explaining streaming delta handling.
+   - [x] Ensure TypeScript types satisfied without suppressions; rely on `@types/node` for `process.stdout` typings.
 
 6. package.json Scripts & Module Flag
-   - [ ] Set `"type": "module"` in `package.json` to keep ESM consistent with TS config.
-   - [ ] Add scripts: `"dev": "tsx src/hello.ts"`, `"build": "tsc -p tsconfig.json"`, `"start": "node dist/hello.js"`, `"test": "node -e \"console.log('smoke')\""`; mirror spec names for supportability.
+   - [x] Set `"type": "module"` in `package.json` to keep ESM consistent with TS config.
+   - [x] Add scripts: `"dev": "tsx src/hello.ts"`, `"build": "tsc -p tsconfig.json"`, `"start": "node dist/hello.js"`, `"test": "node -e \"console.log('smoke')\""`; mirror spec names for supportability.
    - [ ] Confirm build emits `dist/hello.js` so `npm start` never fails post-build.
 
 7. Run Pipeline
