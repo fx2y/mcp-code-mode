@@ -56,7 +56,7 @@ cat <<EOF > src/hello.ts
 import { query } from "@anthropic-ai/claude-agent-sdk";
 
 const it = query({
-  model: "claude-3-5-sonnet-latest",
+  model: "claude-sonnet-4-5",
   messages: [{ role: "user", content: "Say hello briefly." }],
   allowedTools: [], // Start locked down
 });

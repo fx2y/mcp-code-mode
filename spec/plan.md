@@ -24,7 +24,8 @@ _**Objective:** Define logical epics for delivering the `mcp-code-mode-starter` 
     *   **2.1. TS Compilation Setup:** Configure the TypeScript-to-JavaScript build.
         *   Tasks: `npx tsc --init` with specified ESM-friendly flags. (Ref: `1A-3`)
     *   **2.2. Agent Implementation:** Write the minimal, tool-free agent logic.
-        *   Tasks: Create and populate `src/hello.ts`. (Ref: `1B-1`)
+        *   Tasks: Create and populate `src/hello.ts` with corrected SDK v0.1.30 API. (Ref: `1B-1`)
+        *   **🚀 Bonus**: Implement zero-config credentials via `settingSources: ['user']`
     *   **2.3. Scripting & Execution:** Wire up `package.json` to run the agent.
         *   Tasks: Set `"type": "module"`, add `dev/build/start/test` scripts. (Ref: `1B-2`)
 
