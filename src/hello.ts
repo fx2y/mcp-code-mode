@@ -1,10 +1,16 @@
-import { query } from "@anthropic-ai/claude-agent-sdk";
+import { sandboxQuery } from "./sandboxed-query.js";
 
-const it = query({
-  prompt: "Say hello briefly.",
+const it = sandboxQuery({
+  prompt:
+    "Use the sandboxed_code.run tool to print 'hello from the sandbox' via printf and report the captured stdout.",
   options: {
-    allowedTools: [], // Security: start locked down
-    settingSources: ['user'], // Use global user settings
+    settingSources: ["user"],
+    sandboxPolicy: {
+      metadata: { run_id: "hello-demo" },
+      proc: {
+        timeoutMs: 10_000,
+      },
+    },
   },
 });
 

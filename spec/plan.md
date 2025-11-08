@@ -51,6 +51,8 @@
   - The "Happy Path" walkthrough passes. (`@spec/walkthroughs.md §1`)
   - A query with a policy override behaves differently than one without.
 
+- **Status 2025-11-08:** `sandboxed_code.run` + `sandboxQuery()` landed (`src/tools/sandboxed-code.ts`, `src/sandboxed-query.ts`) with default `canUseTool` gating and policy override plumbing; `src/hello.ts` now exercises the tool. Still need an end-to-end walkthrough against Anthropic's backend to satisfy the Happy Path criteria.
+
 ---
 
 ### Milestone 3: Production Readiness & Security Hardening

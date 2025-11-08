@@ -78,6 +78,7 @@ Agent (SDK) ⇄ Sandbox runner (exec, FS, subprocess) ⇄ MCP client libs ⇄ MC
 - `src/sandbox/policy/{schema,defaults,loader}.ts` + `sandbox.policy.yaml` ship the YAML-driven policy loader with deny-all net + minimal mounts.
 - Build/test smoke (`npm run build && npm run test`) covers the new types/loader wiring; still need container runner + enforcement layers.
 - `docker/sandbox.Dockerfile` + `src/sandbox/runner/{local-container-runner,docker-args}.ts` implement a Docker-backed runner with policy→CLI translation + output trimming; network/fs/proc flag verification + deny-glob enforcement still open.
+- `src/tools/sandboxed-code.ts` + `src/sandboxed-query.ts` deliver the `sandboxed_code.run` MCP tool, default `canUseTool` gating, policy override plumbing, and a `src/hello.ts` example; `tests/sandboxed-code-tool.test.ts` exercises stub-runner merges + error paths.
 
 ## Integration Points
 
@@ -116,10 +117,9 @@ Implement security rule processor:
 
 ### Phase 3: SDK Integration
 Wire sandbox into Agent SDK:
-- Extend query options for sandbox configuration
-- Implement sandbox tool execution hooks
-- Add permission controls for sandbox operations
-- Create sandbox-specific error handling
+- Landed `sandboxed_code.run` + `sandboxQuery()` helper; next focus is recording an end-to-end walkthrough against Anthropic's backend to prove the happy-path behavior.
+- Capture real model transcripts showing the tool request/response cycle once API access is available.
+- Formalize regression coverage so SDK updates cannot silently bypass the sandbox guardrails.
 
 ### Phase 4: Security Hardening
 Production-ready security:

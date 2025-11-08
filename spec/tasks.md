@@ -9,7 +9,7 @@
 
 - [ ] **Phase 1:** Core Sandbox Infrastructure & Interface
 - [ ] **Phase 2:** Policy Engine & Configuration
-- [ ] **Phase 3:** Agent SDK Integration
+- [x] **Phase 3:** Agent SDK Integration
 - [d] **Phase 4:** Security Hardening & Verification
 - [ ] **Phase 5:** Observability & Documentation
 
@@ -84,25 +84,29 @@
 
 > **Goal:** Wire the sandboxed runner into the Claude Agent SDK to replace the default, non-isolated tool execution.
 
-- [ ] **3.1. Create Sandbox-aware Tool Runner**
-  - [ ] Adapt the `bash.run` tool logic from `@anthropic-ai/claude-agent-sdk/sdk-tools.d.ts`.
-  - [ ] Create a new tool, e.g., `sandboxed_code.run`, that accepts code and an optional policy override.
-  - [ ] This tool will use the `SandboxRunner` from Phase 1.
-  - [ ] Disable the default `bash.run` tool or ensure its `dangerouslyDisableSandbox` flag is never used. Ref: `@spec/prime.md §12`
+- [x] **3.1. Create Sandbox-aware Tool Runner**
+  - [x] Adapted the CLI tool contract into `createSandboxedCodeToolDefinition()` / `createSandboxedCodeServer()` (`src/tools/sandboxed-code.ts`) backed by `SandboxRunner`.
+  - [x] `sandboxed_code.run` accepts shell snippets + policy overrides and returns structured stdout/stderr/policy snapshots for auditing.
+  - [x] Defaulted the tool to `LocalContainerRunner` and ensured newline-safe script uploads to `/sandbox/snippet.sh`.
+  - [x] Output text is truncated to 2k chars while the structured payload retains full stdout/stderr for downstream tools.
 
-- [ ] **3.2. Integrate Runner with Agent SDK Hooks**
-  - [ ] Use `sdk.configure` to register the new `sandboxed_code.run` tool.
-  - [ ] Use the `onToolRequest` hook to gate tool usage. Ref: `@spec/cheatsheet.md §56`
-  - [ ] Deny unknown tools by default.
-  - [ ] **Initial state:** Update `src/hello.ts` to use the new sandboxed tool.
+- [x] **3.2. Integrate Runner with Agent SDK Hooks**
+  - [x] Introduced `sandboxQuery()` helper (`src/sandboxed-query.ts`) that wraps `query()`, registers the MCP server, and threads the runner/tool wiring in one place.
+  - [x] Added a default `canUseTool` guard that auto-approves `sandboxed_code.run` and denies every other tool to keep `bash.run` dormant.
+  - [x] `sandboxQuery()` auto-appends the tool to `allowedTools` + `mcpServers`, so callers no longer modify SDK plumbing manually.
+  - [x] Updated `src/hello.ts` to call `sandboxQuery()` and instruct the model to use `sandboxed_code.run` for the demo flow.
 
-- [ ] **3.3. Expose Sandbox Configuration in `query()`**
-  - [ ] Extend the `query()` options to accept a `sandboxPolicy` object. Ref: `@spec/prime.md §41`
-  - [ ] This policy will be the default for all `sandboxed_code.run` calls within that query.
+- [x] **3.3. Expose Sandbox Configuration in `query()`**
+  - [x] `sandboxQuery()` accepts `sandboxPolicy`, `sandboxRunner`, and policy file overrides; these defaults are merged into every `sandboxed_code.run` call.
+  - [x] The helper keeps user-supplied SDK options intact (model, hooks, etc.) while injecting sandbox defaults.
 
-- [ ] **34. Handle Sandbox-specific Errors**
-  - [ ] Catch errors from the sandbox runner (e.g., timeout, OOM kill).
-  - [ ] Format them into a clear, concise error message to be returned to the agent model.
+- [x] **34. Handle Sandbox-specific Errors**
+  - [x] Tool handler catches runner failures and returns `CallToolResult` with `isError: true` plus serialized error details for the model log.
+  - [x] Success payloads always include exit code, runtime, stdout/stderr excerpts, and the effective policy snapshot for audits.
+
+- [x] **Verification (2025-11-08):** `npm run build && npm run test` now cover `tests/sandboxed-code-tool.test.ts`, exercising policy merges + error surfacing without Docker.
+
+> ❗ **Gap:** Need an end-to-end walkthrough (e.g., scripted `sandboxQuery` session) that proves the SDK actually invokes the tool against Anthropic's live backend once API access is configured.
 
 ## Phase 4: Security Hardening & Verification
 
