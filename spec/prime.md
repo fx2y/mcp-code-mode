@@ -77,6 +77,7 @@ Agent (SDK) ⇄ Sandbox runner (exec, FS, subprocess) ⇄ MCP client libs ⇄ MC
 - `src/sandbox/types.ts` defines `SandboxRunner`, `SandboxPolicy`, `SandboxResult`, bringing Phase 1.1 online.
 - `src/sandbox/policy/{schema,defaults,loader}.ts` + `sandbox.policy.yaml` ship the YAML-driven policy loader with deny-all net + minimal mounts.
 - Build/test smoke (`npm run build && npm run test`) covers the new types/loader wiring; still need container runner + enforcement layers.
+- `docker/sandbox.Dockerfile` + `src/sandbox/runner/{local-container-runner,docker-args}.ts` implement a Docker-backed runner with policy→CLI translation + output trimming; network/fs/proc flag verification + deny-glob enforcement still open.
 
 ## Integration Points
 

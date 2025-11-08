@@ -7,7 +7,7 @@
     "dev": "tsx src/hello.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/hello.js",
-    "test": "node -e \"console.log('smoke')\""
+    "test": "tsx --test tests/**/*.test.ts"
   },
   "repository": {
     "type": "git",

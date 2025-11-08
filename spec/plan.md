@@ -26,7 +26,7 @@
   - A script can directly invoke the `LocalContainerRunner` to execute code.
   - All policies (FS, NET, PROC) are demonstrably enforced at the container level.
   - Passes local tests for resource limits and FS/NET isolation without agent involvement.
-- **Status 2025-11-08:** Type definitions + YAML policy loader merged; container runner + enforcement still TBD.
+- **Status 2025-11-08:** Local Docker runner + base image + policy→CLI translator landed (`src/sandbox/runner/*`, `docker/sandbox.Dockerfile`). Need FS deny-glob enforcement + live Docker verification to finish the milestone.
 
 ---
 

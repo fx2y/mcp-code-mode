@@ -25,21 +25,19 @@
   - [x] Define `SandboxPolicy` type (FS, NET, PROC limits). Ref: `@spec/cheatsheet.md §48`
   - [x] Define `SandboxResult` type (stdout, stderr, exitCode, resourceUsage).
 
-- [ ] **1.2. Setup Local Sandbox Provider (Container-based)**
-  - [ ] Choose local container runtime (e.g., Docker/Podman). Ref: `@spec/cheatsheet.md §70`
-  - [ ] Create a minimal base image Dockerfile for the execution environment.
-    - Include Node.js runtime.
-    - Pre-install any necessary dependencies (`/deps`).
-  - [ ] Develop a script to run a container with specified resource limits and mounts.
+- [x] **1.2. Setup Local Sandbox Provider (Container-based)**
+  - [x] Choose Docker CLI as the local runtime; wired via `LocalContainerRunner`. (2025-11-08)
+  - [x] Create a minimal base image in `docker/sandbox.Dockerfile` (Node 20 + tini + non-root sandbox user with `/workspace` + `/deps` mounts).
+  - [x] Develop the runnable wrapper that launches containers with mounts/limits (`src/sandbox/runner/local-container-runner.ts`).
+  - [x] Verification (2025-11-08): `npm run build && npm run test` compile/run the new runner utilities.
 
-- [ ] **1.3. Implement Basic Sandbox Execution Wrapper**
-  - [ ] Create a concrete `LocalContainerRunner` that implements `SandboxRunner`.
-  - [ ] The `exec` method should:
-    - [ ] Start a new container from the base image.
-    - [ ] Apply basic FS mounts (e.g., mount a temporary script file).
-    - [ ] Execute the code inside the container.
-    - [ ] Capture stdout/stderr and kill the container.
-    - [ ] Return the `SandboxResult`.
+- [x] **1.3. Implement Basic Sandbox Execution Wrapper**
+  - [x] Ship `LocalContainerRunner` with logger hooks and output truncation safeguards.
+  - [x] The `exec` method now:
+    - [x] Starts a per-run container from `mcp-code-mode-sandbox:latest`.
+    - [x] Applies FS mounts + temp script bind (`/sandbox/snippet.sh`).
+    - [x] Executes code via `/bin/sh`, captures stdout/stderr, enforces timeout, returns `SandboxResult`.
+  - [x] Verification (2025-11-08): `npm run test` runs `tests/docker-args.test.ts` to ensure policy → CLI translation; `npm run build` validates type-safety.
 
 ## Phase 2: Policy Engine & Configuration
 
@@ -55,22 +53,24 @@
   - [x] Verification (2025-11-08): `npm run build`, `npm run test` cover schema typing + loader import paths.
 
 - [ ] **2.2. Implement Filesystem (FS) Policy Enforcement**
-  - [ ] Integrate policy with the `LocalContainerRunner`.
-  - [ ] Translate `fs.mounts` policy to container volume mount commands (`-v` or `--mount`).
+  - [x] Integrate policy mounts with `LocalContainerRunner.resolveMounts()` (auto-creates host dirs).
+  - [x] Translate `fs.mounts` policy to Docker `--mount` flags via `buildDockerRunArgs`.
     - `/workspace` (RW, ephemeral)
     - `/deps` (RO)
     - `/tmp` (RW, tmpfs)
   - [ ] Verify `fs.deny_globs` are not accessible. This may require runtime checks or more advanced container features. Start with mount restrictions. Ref: `@spec/cheatsheet.md §27`
+    - ❗ Gap: No runtime glob enforcement yet; need overlay/allowlist probe.
 
 - [ ] **2.3. Implement Network (NET) Policy Enforcement**
-  - [ ] Translate `net.enabled` policy to container network flags.
+  - [x] Translate `net.enabled` policy to container network flags (`bridge` vs `none`) inside `buildDockerRunArgs`.
     - `true` -> `--network=bridge` (or similar, to be refined in Phase 4)
     - `false` -> `--network=none`
   - [ ] **Verification:**
     - [ ] `net.enabled: false` blocks all outbound traffic.
+    - ❗ Pending manual/automated probe; runner currently assumes Docker honors flag.
 
 - [ ] **2.4. Implement Process (PROC) & Resource Limit Enforcement**
-  - [ ] Translate `proc` policies to container runtime flags. Ref: `@spec/cheatsheet.md §28, §40`
+  - [x] Translate `proc` policies to container runtime flags via `buildDockerRunArgs` + runner timeout.
     - `cpu_quota` -> `--cpus`
     - `mem_mb` -> `--memory`
     - `timeout_ms` -> Implement via a `Promise.race` with a `setTimeout` that kills the container.
@@ -78,6 +78,7 @@
   - [ ] **Verification:**
     - [ ] A script exceeding `mem_mb` is killed.
     - [ ] An infinite loop is killed by the `timeout_ms`.
+    - ❗ Need e2e stress scripts once Docker execution is wired into CI/dev env.
 
 ## Phase 3: Agent SDK Integration
 
