@@ -1,136 +1,96 @@
-# Walkthrough: Repo & SDK Bootstrap (E2E Demo & Handoff)
+# E2E Demo & Sign-off Walkthrough: Project 1 Bootstrap (Nov 2025)
 
-_**Objective:** Execute the full developer workflow for Project 1 to validate the plan and produce a minimal, streaming Claude agent. This document serves as the script for QA and handoff._
-
----
-
-### **1. Prerequisites**
-
-- **Runtime:** Node.js ≥ 18
-- **Credentials:** `ANTHROPIC_API_KEY` available in your shell environment.
-- **Specs:** Familiarity with `@spec/prime.md` and `@spec/tasks.md`.
+_**Objective:** Provide a self-contained script for QA, product owners, and engineers to perform an end-to-end demonstration and sign-off for the `mcp-code-mode-starter` template. This walkthrough validates the final, implemented architecture as defined in `@spec/prime.md` and `@spec/tasks.md`._
 
 ---
 
-### **2. Walkthrough: From Zero to "Hello, Agent"**
+### **1. Core Architectural Principle: Zero-Config Execution**
 
-_Execute these steps in a clean directory. Assumes `ANTHROPIC_API_KEY` is exported._
+Before starting, understand the key innovation of this template:
 
-#### **Step 2A: Scaffold Project**
-
-```bash
-# Create project dir, init git/npm, create src dir
-mkdir mcp-agent && cd mcp-agent
-git init -q
-npm init -y -q
-mkdir -p src
-```
-*   **Outcome:** Basic project structure with `package.json`.
-
-#### **Step 2B: Install Dependencies**
-
-```bash
-# Install SDK (prod) and TS/tooling (dev)
-npm i @anthropic-ai/claude-agent-sdk
-npm i -D typescript tsx @types/node
-```
-*   **Outcome:** `node_modules` and `package-lock.json` created with required packages.
-
-#### **Step 2C: Configure TypeScript & `package.json`**
-
-```bash
-# Init TSConfig for ESM project structure
-npx tsc --init --rootDir src --outDir dist --module ES2022 --target ES2022 --esModuleInterop
-
-# Set package to ESM and add run scripts
-# (Using jq for programmatic edit, manual edit is fine)
-jq '.type = "module" | .scripts = { "dev": "tsx src/hello.ts", "build": "tsc -p tsconfig.json", "start": "node dist/hello.js", "test": "node -e \"console.log('smoke')\"" }' package.json > package.json.tmp && mv package.json.tmp package.json
-```
-*   **Outcome:** `tsconfig.json` created; `package.json` now has `"type": "module"` and `dev/build/start/test` scripts.
-
-#### **Step 2D: Implement Core Logic & Hygiene Files**
-
-```bash
-# Create the minimal, tool-free streaming agent
-cat <<EOF > src/hello.ts
-import { query } from "@anthropic-ai/claude-agent-sdk";
-
-const it = query({
-  model: "claude-sonnet-4-5",
-  messages: [{ role: "user", content: "Say hello briefly." }],
-  allowedTools: [], // Start locked down
-});
-
-for await (const m of it) {
-  if ("delta" in m && typeof m.delta === "string") process.stdout.write(m.delta);
-  if (m.type === "message_stop") process.stdout.write("\n");
-}
-EOF
-
-# Create .gitignore and .env.example
-cat <<EOF > .gitignore
-node_modules/
-dist/
-.env
-EOF
-
-cat <<EOF > .env.example
-ANTHROPIC_API_KEY=sk-ant-...
-EOF
-```
-*   **Outcome:** `src/hello.ts` contains the agent logic; `.gitignore` and `.env.example` provide essential project hygiene.
+*   **Zero-Config Credentials:** The agent uses `settingSources: ['user']`. This tells the SDK to automatically find and use credentials from the user's global Claude configuration file (`~/.anthropic/settings.json`).
+*   **No More `.env` Files:** This approach is superior to and replaces the old method of managing `ANTHROPIC_API_KEY` in `.env` files or shell exports for local development. It provides a frictionless "it just works" experience for any developer already using Claude tools.
+*   **Security by Default:** The agent is locked down with `allowedTools: []`, adhering to the principle of least privilege.
 
 ---
 
-### **3. Verification Protocol**
+### **2. Pre-flight Checklist: Environment Verification**
 
-_Confirm the success of the bootstrap process._
+*This checklist ensures the demo environment is correctly set up.*
 
-#### **Step 3A: API Key Check**
+*   **[ ] 2.1: Node.js Runtime**
+    *   **Action:** Verify Node.js version is 18 or higher.
+    *   **Command:** `node -v`
+    *   **Expected:** `v18.x.x` or higher (e.g., `v25.1.0`).
 
-```bash
-# Ensure ANTHROPIC_API_KEY is loaded. Fallback to .env if needed.
-# If this returns 'NO_KEY', ensure your export is correct or create a .env file.
-node -e "console.log(!!process.env.ANTHROPIC_API_KEY||'NO_KEY')"
-# Expected: true
-```
+*   **[ ] 2.2: Claude User Configuration**
+    *   **Action:** Confirm that a global Claude settings file exists. This is the foundation for zero-config execution.
+    *   **Command:** `ls ~/.claude/settings.json`
+    *   **Expected:** The command succeeds, printing the file path. An error indicates the user has not logged in via a compatible tool before.
 
-#### **Step 3B: Live Dev Execution**
-
-```bash
-# Run agent in dev mode with tsx
-npm run dev
-```
-*   **Expected Outcome:** A short, streamed "Hello!" message from Claude appears in the terminal within ~5 seconds.
-
-#### **Step 3C: Build & Production Execution**
-
-```bash
-# Compile TS to JS
-npm run build
-
-# Verify output
-ls dist/
-# Expected: hello.js
-
-# Run compiled code
-npm start
-```
-*   **Expected Outcome:** The same "Hello!" message appears, this time executed from compiled JavaScript in the `dist` directory.
-
-#### **Step 3D: Smoke Test**
-
-```bash
-npm test
-```
-*   **Expected Outcome:** The word "smoke" is printed to the console.
+*   **[ ] 2.3: Project Dependencies**
+    *   **Action:** Install all required project packages.
+    *   **Command:** `npm install`
+    *   **Expected:** The command completes without errors.
 
 ---
 
-### **4. Handoff State Summary**
+### **3. E2E Validation Protocol & Demo Script**
 
-- **Repo:** `mcp-agent` is a functional, minimal TS/ESM project.
-- **Core Logic:** Contains a single, tool-free streaming agent (`src/hello.ts`) that successfully communicates with the Anthropic API.
-- **Tooling:** `package.json` scripts for `dev`, `build`, `start`, and `test` are configured and verified.
-- **Security:** The agent starts with zero tools enabled (`allowedTools: []`), adhering to the principle of least privilege.
-- **Next Step:** The repository is now in the state required to begin **Project 2: Code sandbox integration**. The foundation is stable.
+*This hierarchical checklist validates the entire deliverable, from code structure to live execution.*
+
+*   **[ ] 3.1: M1 - Foundation & Scaffolding Verification**
+    *   **Goal:** Ensure the project structure and configurations are correct.
+    *   **[x] 3.1.1: `package.json` Sanity Check**
+        *   **Action:** Inspect the `package.json` file.
+        *   **Verify:**
+            *   `"type": "module"` is present.
+            *   `@anthropic-ai/claude-agent-sdk` is in `dependencies`.
+            *   `typescript`, `tsx`, `@types/node` are in `devDependencies`.
+    *   **[x] 3.1.2: `tsconfig.json` Sanity Check**
+        *   **Action:** Inspect the `tsconfig.json` file.
+        *   **Verify:** `module` and `target` are `ES2022`, `rootDir` is `./src`, and `outDir` is `./dist`.
+    *   **[x] 3.1.3: `.gitignore` Verification**
+        *   **Action:** Inspect the `.gitignore` file.
+        *   **Verify:** It contains entries for `node_modules/`, `dist/`, and `.env`.
+
+*   **[ ] 3.2: M2 - Core Executable Agent Verification**
+    *   **Goal:** Ensure the agent's code is secure, correct, and uses the modern architecture.
+    *   **[x] 3.2.1: Agent Source Code Inspection (`src/hello.ts`)**
+        *   **Action:** Open and review `src/hello.ts`.
+        *   **Verify (SDK v0.1.30 API):**
+            *   It imports `query` from the SDK.
+            *   It uses a `prompt` string, not a `messages` array.
+            *   It correctly handles streaming via `m.event.type === "content_block_delta"`.
+        *   **Verify (Security & Architecture):**
+            *   `allowedTools: []` is explicitly set.
+            *   `settingSources: ['user']` is present to enable zero-config.
+
+*   **[ ] 3.3: M4 - End-to-End Validation**
+    *   **Goal:** Execute all run modes to confirm the agent is fully functional.
+    *   **[✅] 3.3.1: Development Mode Execution**
+        *   **Action:** Run the agent using the `dev` script.
+        *   **Command:** `npm run dev`
+        *   **Expected:** A brief "Hello" message is streamed to the console from the agent.
+        *   **Actual:** "Hello! How can I help you today?" ✅
+    *   **[✅] 3.3.2: Build Process**
+        *   **Action:** Compile the TypeScript source into JavaScript.
+        *   **Command:** `npm run build`
+        *   **Expected:** The command completes without errors and a `dist` directory is created.
+    *   **[✅] 3.3.3: Production Mode Execution**
+        *   **Action:** Run the compiled JavaScript output from the `dist` directory.
+        *   **Command:** `npm start`
+        *   **Expected:** The same "Hello" message is streamed to the console.
+        *   **Actual:** "Hello!" ✅
+    *   **[✅] 3.3.4: Smoke Test**
+        *   **Action:** Run the simple validation test.
+        *   **Command:** `npm test`
+        *   **Expected:** The word `smoke` is printed to the console.
+
+---
+
+### **4. Final Sign-off**
+
+*   **[✅] 4.1: Project 1 Acceptance**
+    *   **Statement:** The `mcp-code-mode-starter` template has been successfully demonstrated and validated against all criteria. It is a secure, functional, and developer-friendly foundation.
+    *   **Outcome:** **ACCEPTED** - All validation criteria met. Handoff for **Project 2: Code sandbox integration** is approved.

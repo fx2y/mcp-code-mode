@@ -9,8 +9,9 @@ const it = query({
 });
 
 for await (const m of it) {
-  if (m.type === "stream_event" && m.event.type === "content_block_delta" && m.event.delta?.type === "text_delta") {
-    process.stdout.write(m.event.delta.text);
+  // Correct API for this SDK version
+  if (m.type === "assistant" && m.message?.content?.[0]?.text) {
+    process.stdout.write(m.message.content[0].text);
   }
   if (m.type === "result") {
     process.stdout.write("\n");
